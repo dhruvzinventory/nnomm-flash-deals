@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nnomm-db
+    environment:
+      POSTGRES_DB: nnomm
+      POSTGRES_USER: nnomm
+      POSTGRES_PASSWORD: nnomm_local_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nnomm -d nnomm"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  app1:
+    build: .
+    container_name: nnomm-app-1
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/nnomm
+      DATABASE_USER: nnomm
+      DATABASE_PASSWORD: nnomm_local_dev
+      JWT_SECRET: super-secret-jwt-key-for-local-testing-purposes-123
+      WEBHOOK_SECRET: super-secret-webhook-key-for-local-testing-123
+      CLAIM_TTL_SECONDS: 600
+      PORT: 8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app2:
+    build: .
+    container_name: nnomm-app-2
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/nnomm
+      DATABASE_USER: nnomm
+      DATABASE_PASSWORD: nnomm_local_dev
+      JWT_SECRET: super-secret-jwt-key-for-local-testing-purposes-123
+      WEBHOOK_SECRET: super-secret-webhook-key-for-local-testing-123
+      CLAIM_TTL_SECONDS: 600
+      PORT: 8081
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
